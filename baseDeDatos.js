@@ -111,7 +111,7 @@ async function searchLuckyNumberRange(client, rangeSmaller, rangeBigger) {
     }
 }
 
-async function addAField(client, ArrNew) {
+async function addAFieldInteres(client, ArrNew) {
     const result = await client.db(dataBase).collection(collectionName)
         //en esta linea vemos que intereses no existe y en la siguiente usamos un set para agregar la propiedad y no sobre escribir todo el objeto
         .updateMany({ interes: { $exists: false } },
@@ -119,20 +119,58 @@ async function addAField(client, ArrNew) {
     console.log(`${result.modifiedCount} documentos modificados`)
 }
 
+async function updateNumberBeld(client) {
+    const result = await client.db(dataBase).collection(collectionName).updateOne({ home_state: 'Washington' }, { $set: { number_of_belts: 1 } })
+}
+
+async function updateKeyName(client) {
+    const result = await client.db(dataBase).collection(collectionName).updateMany({}, { $rename: { 'number_of_belts': 'belts_earned' } })
+}
+
+
+async function addAFieldNumberBeld(client) {
+    const result = await client.db(dataBase).collection(collectionName)
+        //en esta linea vemos que intereses no existe y en la siguiente usamos un set para agregar la propiedad y no sobre escribir todo el objeto
+        .updateMany({ number_of_belts: { $exists: false } },
+            { $set: { number_of_belts: 0 } });
+    console.log(`${result.modifiedCount} documentos modificados`)
+}
+
+
 async function addInterest(client, searchName, newInterest) {
     const res = await client.db(dataBase).collection(collectionName).updateOne({ name: searchName }, { $push: { interes: newInterest } })
     console.log(res);
     res.modifiedCount !== 0 ? console.log("Cambio realizado") : console.log("Ha ocurrido un error")
+}
+async function insertUpdateOn(client) {
+    const res = await client.db(dataBase).collection(collectionName).updateMany({ updated_on: { $exists: false } }, { $set: { updated_on: new Date() } })
+    console.log(`${res.modifiedCount} documentos modificados`)
 }
 
 async function deleteForName(client, deleteName) {
     const result = await client.db(dataBase).collection(collectionName).deleteOne({ name: deleteName })
     console.log(`${result.deletedCount} Dato Eliminado `);
 }
+async function deleteOneField(client) {
+    const result = await client.db(dataBase).collection(collectionName).updateMany(
+        {},
+        { $unset: { lucky_number: "" } }
+    )
+}
 
 async function deleteForHomeState(client, deleteHomeState) {
     const result = await client.db(dataBase).collection(collectionName).deleteMany({ home_state: deleteHomeState })
     console.log(`${result.deletedCount} Dato Eliminado `);
+}
+
+async function deleteOneLuckyNumber(client, luckyNumber) {
+    const result = await client.db(dataBase).collection(collectionName).deleteOne({
+        lucky_number: {
+            $gte: luckyNumber
+        }
+    })
+    console.log(`${result.deletedCount} Dato Eliminado `);
+
 }
 
 async function main() {
@@ -141,8 +179,9 @@ async function main() {
     try {
         // Connect to the MongoDB cluster
         await client.connect();
-        await deleteForHomeState(client, "California");
+        //await deleteForHomeState(client, "California");
         //await searchHomeState(client, "California", "Washington")
+        await insertUpdateOn(client);
         await allDataCollection(client);
         //await searchOneData(client, { "name": "Rodrigo" });
     } catch (e) {
